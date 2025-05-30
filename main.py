@@ -32,7 +32,7 @@ preto = (0, 0 ,0 )
 personagem = pygame.image.load("recursos/personagem.png")
 inimigo = pygame.image.load("recursos/monstro.webp")
 fundoStart = pygame.image.load("recursos/inicio.jpg")
-fundoJogo = pygame.image.load("recursos/fundo.jpg")
+fundoJogo = pygame.image.load("recursos/fundo.png")
 fundoDead = pygame.image.load("recursos/morte.png")
 boladefogo = pygame.image.load("recursos/boladefogo.png")
 missileSound = pygame.mixer.Sound("recursos/boladefogosom.mp3")
@@ -41,7 +41,7 @@ fonteMenu = pygame.font.SysFont("comicsans",18)
 fonteMorte = pygame.font.SysFont("arial",120)
 pygame.mixer.music.load("recursos/themesom.mp3")
 
-personagem = pygame.transform.scale(personagem, (100, 100)) 
+personagem = pygame.transform.scale(personagem, (150, 167)) 
 boladefogo = pygame.transform.scale(boladefogo, (80, 80))
 monstroLargura = 200
 monstroAltura = 200
