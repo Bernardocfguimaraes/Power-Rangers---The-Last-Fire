@@ -43,8 +43,8 @@ pygame.mixer.music.load("recursos/themesom.mp3")
 
 personagem = pygame.transform.scale(personagem, (100, 100)) 
 boladefogo = pygame.transform.scale(boladefogo, (80, 80))
-monstroLargura = 300
-monstroAltura = 300
+monstroLargura = 200
+monstroAltura = 200
 monstro = pygame.transform.scale(inimigo, (monstroLargura, monstroAltura))
 
 fonteMenu = pygame.font.SysFont('comicsans', 24)
@@ -108,7 +108,7 @@ def iniciar_jogo():
             projetil_x = random.randint(0, largura - 80)
             projetil_y = -80
             velocidade_projetil += 0.01
-            pontuacao += 10
+            pontos += 10
 
         personagem_rect = pygame.Rect(personagem_x, personagem_y, 100, 100)
         projetil_rect = pygame.Rect(projetil_x + 15, projetil_y + 15, 50, 50)
@@ -128,34 +128,25 @@ def iniciar_jogo():
         texto_pontos = fonteMenu.render(f"Pontuação: {pontos}", True, branco)
         tela.blit(texto_pontos, (largura - texto_pontos.get_width() - 10, altura - texto_pontos.get_height() - 10))
 
+#              LUA
         tempo = pygame.time.get_ticks() / 1000
-        sol_x, sol_y = largura - 120, 120
-        raio_sol = 60
+        lua_x, lua_y = largura - 120, 120
+        raio_base = 60
+        raio_variacao = math.sin(tempo * 2) * 5
+        raio_atual = raio_base + raio_variacao
 
-        for i in range(raio_sol, 0, -1):
-            intensidade = 255 - int((i / raio_sol) * 100)
-            cor = (255, intensidade, 50)
-            pygame.draw.circle(tela, cor, (sol_x, sol_y), i)
+        brilho_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
+        for i in range(1, 6):
+            alpha = max(0, 50 - i * 8)  
+            raio_brilho = int(raio_atual + i * 10)
+            cor_brilho = (200, 200, 200, alpha)  
+            pygame.draw.circle(brilho_surface, cor_brilho, (lua_x, lua_y), raio_brilho)
 
-        brilho = 220 + int(10 * math.sin(tempo * 2))
-        cor_raio = (255, brilho, 60)
-
-        for i in range(12):
-            angulo = math.radians(i * 30)
-            offset = 5 * math.sin(tempo * 3 + i)
-            comprimento = 30 + offset
-            x1 = sol_x + int((raio_sol - 5) * math.cos(angulo))
-            y1 = sol_y + int((raio_sol - 5) * math.sin(angulo))
-            x2 = sol_x + int((raio_sol + comprimento) * math.cos(angulo))
-            y2 = sol_y + int((raio_sol + comprimento) * math.sin(angulo))
-            pygame.draw.line(tela, cor_raio, (x1, y1), (x2, y2), 2)
-
-        for i in range(6):
-            raio_aura = raio_sol + 20 + i * 10
-            alpha = max(5, 50 - i * 7)
-            aura_surface = pygame.Surface((raio_aura * 2, raio_aura * 2), pygame.SRCALPHA)
-            pygame.draw.circle(aura_surface, (255, 200, 80, alpha), (raio_aura, raio_aura), raio_aura)
-            tela.blit(aura_surface, (sol_x - raio_aura, sol_y - raio_aura))
+        tela.blit(brilho_surface, (0, 0))
+        for i in range(int(raio_atual), 0, -1):
+            intensidade = 210 - int((i / raio_atual) * 70)
+            cor = (intensidade, intensidade, intensidade)
+            pygame.draw.circle(tela, cor, (lua_x, lua_y), i)
 
         dica_pause = fonteMenu.render("(press space to pause)", True, (180, 180, 180))
         tela.blit(dica_pause, (10, 10))
