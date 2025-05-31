@@ -34,11 +34,11 @@ inimigo = pygame.image.load("recursos/monstro.webp")
 fundoStart = pygame.image.load("recursos/inicio.jpg")
 fundoJogo = pygame.image.load("recursos/fundo.png")
 fundoDead = pygame.image.load("recursos/morte.png")
-boladefogo = pygame.image.load("recursos/boladefogo.png")
+boladefogo = pygame.image.load("recursos/boladefogo.webp")
 missileSound = pygame.mixer.Sound("recursos/boladefogosom.mp3")
 explosaoSound = pygame.mixer.Sound("recursos/errosom.mp3")
-fonteMenu = pygame.font.SysFont("comicsans",18)
-fonteMorte = pygame.font.SysFont("arial",120)
+fonteMenu = pygame.font.SysFont("comicsans",18, True)
+fonteMorte = pygame.font.SysFont("arial",120, True)
 pygame.mixer.music.load("recursos/themesom.mp3")
 
 personagem = pygame.transform.scale(personagem, (150, 167)) 
@@ -47,7 +47,7 @@ monstroLargura = 200
 monstroAltura = 200
 monstro = pygame.transform.scale(inimigo, (monstroLargura, monstroAltura))
 
-fonteMenu = pygame.font.SysFont('comicsans', 24)
+fonteMenu = pygame.font.SysFont('comicsans', 24, True)
 nome = ""
 pontos = 0
 
@@ -83,7 +83,7 @@ def iniciar_jogo():
                     pausado = not pausado
 
         if pausado:
-            texto_pausa = fonteMenu.render("GAME PAUSED - press space to continue", True, branco)
+            texto_pausa = fonteMenu.render("JOGO PAUSADO - PRESSIONE ESPAÇO PARA CONTINUAR", True, branco)
             texto_rect = texto_pausa.get_rect(center=(largura // 2, altura // 2))
             tela.blit(texto_pausa, texto_rect)
             pygame.display.update()
@@ -128,28 +128,67 @@ def iniciar_jogo():
         texto_pontos = fonteMenu.render(f"Pontuação: {pontos}", True, branco)
         tela.blit(texto_pontos, (largura - texto_pontos.get_width() - 10, altura - texto_pontos.get_height() - 10))
 
-#              LUA
+#              OLHOOOOO
         tempo = pygame.time.get_ticks() / 1000
-        lua_x, lua_y = largura - 120, 120
+        olho_x, olho_y = largura - 120, 120
         raio_base = 60
         raio_variacao = math.sin(tempo * 2) * 5
         raio_atual = raio_base + raio_variacao
 
         brilho_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
+
         for i in range(1, 6):
-            alpha = max(0, 50 - i * 8)  
-            raio_brilho = int(raio_atual + i * 10)
-            cor_brilho = (200, 200, 200, alpha)  
-            pygame.draw.circle(brilho_surface, cor_brilho, (lua_x, lua_y), raio_brilho)
+            alpha = max(0, 70 - i * 12)
+            raio_brilho = int(raio_atual + i * 12)
+            cor_brilho = (255, 0, 0, alpha)
+            pygame.draw.circle(brilho_surface, cor_brilho, (olho_x, olho_y), raio_brilho)
 
         tela.blit(brilho_surface, (0, 0))
-        for i in range(int(raio_atual), 0, -1):
-            intensidade = 210 - int((i / raio_atual) * 70)
-            cor = (intensidade, intensidade, intensidade)
-            pygame.draw.circle(tela, cor, (lua_x, lua_y), i)
 
-        dica_pause = fonteMenu.render("(press space to pause)", True, (180, 180, 180))
-        tela.blit(dica_pause, (10, 10))
+        for i in range(int(raio_atual), 0, -1):
+            intensidade = 160 - int((i / raio_atual) * 50)
+            r = intensidade + 90
+            g = intensidade - 40
+            b = intensidade - 50
+            cor = (min(255, max(0, r)), min(255, max(0, g)), min(255, max(0, b)))
+            pygame.draw.circle(tela, cor, (olho_x, olho_y), i)
+
+        pupila_width = int(raio_atual * 0.2)
+        pupila_height = int(raio_atual * 0.7)
+
+        offset_x = int(math.sin(tempo * 1.5) * 5)
+        offset_y = int(math.cos(tempo * 1.5) * 3)
+
+        pygame.draw.ellipse(
+    tela,
+    (0, 0, 0),
+    (
+        olho_x - pupila_width // 2 + offset_x,
+        olho_y - pupila_height // 2 + offset_y,
+        pupila_width,
+        pupila_height,
+    ),
+)
+
+        veias_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
+
+        for i in range(4):  
+            angulo = math.radians(i * 90 + math.sin(tempo + i) * 10)
+            comprimento = raio_atual + 15 + math.sin(tempo * 2 + i) * 3
+            x1 = olho_x + int((raio_atual - 5) * math.cos(angulo))
+            y1 = olho_y + int((raio_atual - 5) * math.sin(angulo))
+            x2 = olho_x + int((comprimento) * math.cos(angulo))
+            y2 = olho_y + int((comprimento) * math.sin(angulo))
+            pygame.draw.line(veias_surface, (120, 0, 0, 150), (x1, y1), (x2, y2), 2)
+
+        tela.blit(veias_surface, (0, 0))
+
+        fontePAUSE = pygame.font.SysFont('comicsans', 24, italic=True)
+        dica_pause = fontePAUSE.render("(Press Space to Pause)", False, branco)
+        rect_dica = dica_pause.get_rect(topleft=(10, 10))
+        borda_rect = pygame.Rect(rect_dica.left - 5, rect_dica.top - 3, rect_dica.width + 10, rect_dica.height + 6)
+        pygame.draw.rect(tela, (0, 0, 0), borda_rect, width=1, border_radius=6)  
+        tela.blit(dica_pause, rect_dica)
 
         pygame.display.update()
         fps.tick(60)
@@ -178,24 +217,30 @@ def game_over():
 
     tela.blit(fundoDead, (0, 0))
 
-    fonte_titulo = pygame.font.SysFont('comicsans', 72)
-    texto = fonte_titulo.render("GAME OVER", True, (255, 0, 0))
+    texto = fonteMorte.render("GAME OVER", True, (0, 0, 0))
     rect = texto.get_rect(center=(largura // 2, altura // 2 - 50))
+    fundo_rect = pygame.Rect(rect.left - 20, rect.top - 20, rect.width + 40, rect.height + 40)
+    pygame.draw.rect(tela, (0, 0, 0), fundo_rect, width=4, border_radius=20)  
     tela.blit(texto, rect)
 
-    pygame.draw.rect(tela, (0, 255, 0), botao_restart)
-    pygame.draw.rect(tela, (255, 0, 0), botao_sair)
+    pygame.draw.rect(tela, branco, botao_restart, width=2, border_radius=8)
+    pygame.draw.rect(tela, branco, botao_sair, width=2, border_radius=8)
 
     fonte_botao = pygame.font.SysFont('comicsans', 30)
-    texto_restart = fonte_botao.render("Restart Game", True, preto)
+    texto_restart = fonte_botao.render("Restart Game", True, branco)
     texto_sair = fonte_botao.render("Quit Game", True, branco)
+    rect_restart = texto_restart.get_rect(center=botao_restart.center)
+    rect_sair = texto_sair.get_rect(center=botao_sair.center)
 
-    tela.blit(texto_restart, (botao_restart.x + 35, botao_restart.y + 10))
-    tela.blit(texto_sair, (botao_sair.x + 50, botao_sair.y + 10))
+    tela.blit(texto_restart, rect_restart)
+    tela.blit(texto_sair, rect_sair)
 
     fonte_pontuacao = pygame.font.SysFont('comicsans', 32)
     texto_pontos = fonte_pontuacao.render(f"Pontuação final: {pontos}", True, branco)
-    tela.blit(texto_pontos, (largura // 2 - texto_pontos.get_width() // 2, altura // 2 + 190))
+    rect_pontos = texto_pontos.get_rect(center=(largura // 2, altura // 2 + 200))
+    fundo_rect = pygame.Rect(rect_pontos.left - 10, rect_pontos.top - 5, rect_pontos.width + 20, rect_pontos.height + 10)
+    pygame.draw.rect(tela, (0, 0, 0), fundo_rect, border_radius=10)
+    tela.blit(texto_pontos, rect_pontos)
 
     fonte_registro = pygame.font.SysFont('comicsans', 20)
     y_offset = 10
@@ -217,8 +262,8 @@ def game_over():
     engine.setProperty('rate', 150)
     engine.setProperty('volume', 1)
 
-    mensagem_falada = f"A pontuação final foi {pontos} pontos"
-    engine.say(mensagem_falada)
+    mensagemfalada1 = f"GAME OVER"
+    engine.say(mensagemfalada1)
     engine.runAndWait()
 
     while True:
@@ -255,16 +300,17 @@ def tela_boas_vindas(nome_jogador):
         titulo_fonte = pygame.font.SysFont('comicsans', 50)
         texto_fonte = pygame.font.SysFont('comicsans', 28)
 
-        texto_bem_vindo = titulo_fonte.render(f"BEM-VINDO, {nome_jogador.upper()}!", True, branco)
-        texto_jogo = texto_fonte.render("ESTE JOGO É O: FIGHT IN SPACE", True, branco)
+        texto_bem_vindo = titulo_fonte.render(f"Você foi convocado para batalha, {nome_jogador.upper()}!", True, branco)
+        texto_jogo = texto_fonte.render("BEM VINDO A POWER RANGERS - THE LAST FIRE", True, branco)
 
         instrucoes = [
-            "COMANDOS:",
-            "- Use as setas <- -> para mover a nave",
-            "- Desvie dos projéteis que caem do céu",
-            "- Se for atingido, é GAME OVER!",
-            "- Pressione 'Espaço' a qualquer momento para PAUSAR",
-            "- Pressione ENTER para começar o jogo!"
+            "COMANDOS E INSTRUÇÕES:",
+            "- Utilize as setas <-  -> para movimentar o boneco.",
+            "- Não seja atingido pelas bolas de fogo que caem do céu.",
+            "- Se você for atingido, o jogo acaba.",
+            "- Pressione a tecla 'Espaço' para PAUSAR caso necessário.",
+            "- Pressione ENTER para começar o jogo!.",
+            "É HORA DE MORFAR"
         ]
 
         tela.blit(texto_bem_vindo, (largura // 2 - texto_bem_vindo.get_width() // 2, 100))
@@ -357,12 +403,14 @@ def start():
         sombra_start = fonteMenu.render("Iniciar Game", True, (50, 50, 50))
         startTexto = fonteMenu.render("Iniciar Game", True, branco)
         start_rect = startTexto.get_rect(topleft=(25, 12))
+        pygame.draw.rect(tela, (100, 0, 0), start_rect.inflate(20, 20))  # Caixa com margem
         tela.blit(sombra_start, (start_rect.x + 2, start_rect.y + 2))
         tela.blit(startTexto, start_rect)
 
         sombra_quit = fonteMenu.render("Sair do Game", True, (50, 50, 50))
         quitTexto = fonteMenu.render("Sair do Game", True, branco)
         quit_rect = quitTexto.get_rect(topleft=(25, 62))
+        pygame.draw.rect(tela, (255, 100, 100), quit_rect.inflate(8, 8))  # Caixa menor e vermelho claro
         tela.blit(sombra_quit, (quit_rect.x + 2, quit_rect.y + 2))
         tela.blit(quitTexto, quit_rect)
 
