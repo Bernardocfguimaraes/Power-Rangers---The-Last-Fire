@@ -12,7 +12,8 @@ import datetime
 import speech_recognition as sr
 import pyttsx3
 import sys
-from tkinter import messagebox
+import pyaudio
+
 pygame.init()
 iniciabanco()
 
@@ -30,22 +31,22 @@ pygame.display.set_caption("Power Rangers - The Last Fire")
 branco = (255,255,255)
 preto = (0, 0 ,0 )
 personagem = pygame.image.load("recursos/personagem.png")
-inimigo = pygame.image.load("recursos/monstro.webp")
-fundoStart = pygame.image.load("recursos/inicio.jpg")
+monstro = pygame.image.load("recursos/monstro.webp")
+fundoComeco = pygame.image.load("recursos/inicio.png")
 fundoJogo = pygame.image.load("recursos/fundo.png")
 fundoDead = pygame.image.load("recursos/morte.png")
 boladefogo = pygame.image.load("recursos/boladefogo.webp")
-missileSound = pygame.mixer.Sound("recursos/boladefogosom.mp3")
-explosaoSound = pygame.mixer.Sound("recursos/errosom.mp3")
+colisao = pygame.mixer.Sound("recursos/errosom.mp3")
 fonteMenu = pygame.font.SysFont("comicsans",18, True)
 fonteMorte = pygame.font.SysFont("arial",120, True)
 pygame.mixer.music.load("recursos/themesom.mp3")
 
 personagem = pygame.transform.scale(personagem, (150, 167)) 
+personagem_rect = personagem.get_rect(midbottom=(largura // 2, altura - 10))
 boladefogo = pygame.transform.scale(boladefogo, (80, 80))
 monstroLargura = 200
 monstroAltura = 200
-monstro = pygame.transform.scale(inimigo, (monstroLargura, monstroAltura))
+monstro = pygame.transform.scale(monstro, (monstroLargura, monstroAltura))
 
 fonteMenu = pygame.font.SysFont('comicsans', 24, True)
 nome = ""
@@ -54,21 +55,25 @@ pontos = 0
 def iniciar_jogo():
     global pontos, nome
     pontos = 0
-
     pygame.mixer.music.play(-1)
 
-    personagem_x = largura // 2 - 50
-    personagem_y = altura - 150
-    velocidade = 15
+    personagem_x = largura // 2 - 75
+    personagem_y = altura - 167
 
-    projetil_x = random.randint(0, largura - 80)
-    projetil_y = -80
-    velocidade_projetil = 2
+    personagem_rect = pygame.Rect(personagem_x, personagem_y, 150, 167)
+
+    boladefogo_x = random.randint(0, largura - 80)
+    boladefogo_y = -80
+
+    boladefogo_rect = pygame.Rect(boladefogo_x, boladefogo_y, 80, 80)
+
+    velocidade = 15
+    velocidade_boladefogo = 2
     aumento_velocidade = 0.01
 
-    inimigo_x = largura // 2 - monstroLargura // 2
-    inimigo_y = 50
-    inimigo_velocidade = 1
+    monstro_x = largura // 2 - monstroLargura // 2
+    monstro_y = 50
+    monstro_velocidade = 1
 
     rodando = True
     pausado = False 
@@ -101,29 +106,25 @@ def iniciar_jogo():
         elif personagem_x > largura - 100:
             personagem_x = largura - 100
 
-        projetil_y += velocidade_projetil
-        velocidade_projetil += aumento_velocidade
+        boladefogo_y += velocidade_boladefogo
+        velocidade_boladefogo += aumento_velocidade
 
-        if projetil_y > altura:
-            projetil_x = random.randint(0, largura - 80)
-            projetil_y = -80
-            velocidade_projetil += 0.01
+        if boladefogo_y > altura:
+            boladefogo_x = random.randint(0, largura - 80)
+            boladefogo_y = -80
+            velocidade_boladefogo += 0.01
             pontos += 10
 
         personagem_rect = pygame.Rect(personagem_x, personagem_y, 100, 100)
-        projetil_rect = pygame.Rect(projetil_x + 15, projetil_y + 15, 50, 50)
+        boladefogo_rect = pygame.Rect(boladefogo_x + 15, boladefogo_y + 15, 50, 50)
 
-        if personagem_rect.colliderect(projetil_rect):
+        if personagem_rect.colliderect(boladefogo_rect):
+            colisao.play()
             game_over()
 
-        inimigo_x += inimigo_velocidade
-        if inimigo_x <= 0 or inimigo_x >= largura - monstroLargura:
-            inimigo_velocidade *= -1
-
         tela.blit(fundoJogo, (0, 0))
-        tela.blit(monstro, (inimigo_x, inimigo_y)) 
         tela.blit(personagem, (personagem_x, personagem_y)) 
-        tela.blit(boladefogo, (projetil_x, projetil_y))
+        tela.blit(boladefogo, (boladefogo_x, boladefogo_y))
 
         texto_pontos = fonteMenu.render(f"Pontuação: {pontos}", True, branco)
         tela.blit(texto_pontos, (largura - texto_pontos.get_width() - 10, altura - texto_pontos.get_height() - 10))
@@ -171,6 +172,12 @@ def iniciar_jogo():
 )
 
         veias_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
+
+#           MONSTROOO
+        monstro_x += monstro_velocidade
+        if monstro_x <= 0 or monstro_x >= largura - monstroLargura:
+            monstro_velocidade *= -1
+        tela.blit(monstro, (monstro_x, monstro_y))
 
         for i in range(4):  
             angulo = math.radians(i * 90 + math.sin(tempo + i) * 10)
@@ -258,14 +265,6 @@ def game_over():
 
     pygame.display.update()
 
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 150)
-    engine.setProperty('volume', 1)
-
-    mensagemfalada1 = f"GAME OVER"
-    engine.say(mensagemfalada1)
-    engine.runAndWait()
-
     while True:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -285,6 +284,7 @@ def game_over():
 
 def tela_boas_vindas(nome_jogador):
     rodando = True
+    mensagem_falada = False
     while rodando:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -297,21 +297,31 @@ def tela_boas_vindas(nome_jogador):
 
         tela.fill(preto)
 
-        titulo_fonte = pygame.font.SysFont('comicsans', 50)
-        texto_fonte = pygame.font.SysFont('comicsans', 28)
+        titulo_fonte = pygame.font.SysFont('arial', 50)
+        texto_fonte = pygame.font.SysFont('times new roman', 28)
 
-        texto_bem_vindo = titulo_fonte.render(f"Você foi convocado para batalha, {nome_jogador.upper()}!", True, branco)
-        texto_jogo = texto_fonte.render("BEM VINDO A POWER RANGERS - THE LAST FIRE", True, branco)
+        texto_bem_vindo = titulo_fonte.render(f"VAMOS PARA BATALHA, {nome_jogador.upper()}!", True, branco)
+        texto_jogo = texto_fonte.render("BEM VINDO A POWER RANGERS - THE LAST FIRE", True, (255, 0, 0))
 
         instrucoes = [
             "COMANDOS E INSTRUÇÕES:",
-            "- Utilize as setas <-  -> para movimentar o boneco.",
+            "- Utilize as setas do teclado para movimentar o boneco.",
             "- Não seja atingido pelas bolas de fogo que caem do céu.",
             "- Se você for atingido, o jogo acaba.",
             "- Pressione a tecla 'Espaço' para PAUSAR caso necessário.",
             "- Pressione ENTER para começar o jogo!.",
             "É HORA DE MORFAR"
         ]
+        
+        if not mensagem_falada:
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 150)
+            engine.setProperty('volume', 1)
+
+            mensagemfalada1 = "É HORA DE MORFAR"
+            engine.say(mensagemfalada1)
+            engine.runAndWait()
+            mensagem_falada = True
 
         tela.blit(texto_bem_vindo, (largura // 2 - texto_bem_vindo.get_width() // 2, 100))
         tela.blit(texto_jogo, (largura // 2 - texto_jogo.get_width() // 2, 170))
@@ -331,7 +341,7 @@ def jogar():
         global nome
         nome = entry_nome.get()
         if not nome.strip():
-            messagebox.showwarning("Aviso", "Por favor, fale ou digite seu nome!")
+            messagebox.showwarning("VOCÊ DEVE FALAR OU DIGITAR SEU NOME PARA PROSSEGUIR")
         else:
             root.destroy()
             tela_boas_vindas(nome)
@@ -362,7 +372,7 @@ def jogar():
     x = (largura_tela - largura_janela) // 2
     y = (altura_tela - altura_janela) // 2
     root.geometry(f"{largura_janela}x{altura_janela}+{x}+{y}")
-    root.title("Nickname")
+    root.title("NOME DO JOGADOR")
     root.protocol("WM_DELETE_WINDOW", ao_fechar_janela)
 
     label_instrucao = tk.Label(root, text="Fale ou digite seu nickname:")
@@ -398,19 +408,19 @@ def start():
                     pygame.quit()
                     sys.exit()
 
-        tela.blit(fundoStart, (0, 0))
+        tela.blit(fundoComeco, (0, 0))
 
-        sombra_start = fonteMenu.render("Iniciar Game", True, (50, 50, 50))
-        startTexto = fonteMenu.render("Iniciar Game", True, branco)
-        start_rect = startTexto.get_rect(topleft=(25, 12))
-        pygame.draw.rect(tela, (100, 0, 0), start_rect.inflate(20, 20))  # Caixa com margem
+        sombra_start = fonteMenu.render("Iniciar Jogo", True, (50, 50, 50))
+        startTexto = fonteMenu.render("Iniciar Jogo", True, branco)
+        start_rect = startTexto.get_rect(centerx=largura // 2, y=altura // 2 + 100) 
+        pygame.draw.rect(tela, (100, 0, 0), start_rect.inflate(20, 20))  
         tela.blit(sombra_start, (start_rect.x + 2, start_rect.y + 2))
         tela.blit(startTexto, start_rect)
 
-        sombra_quit = fonteMenu.render("Sair do Game", True, (50, 50, 50))
-        quitTexto = fonteMenu.render("Sair do Game", True, branco)
-        quit_rect = quitTexto.get_rect(topleft=(25, 62))
-        pygame.draw.rect(tela, (255, 100, 100), quit_rect.inflate(8, 8))  # Caixa menor e vermelho claro
+        sombra_quit = fonteMenu.render("Sair do Jogo", True, (50, 50, 50))
+        quitTexto = fonteMenu.render("Sair do Jogo", True, branco)
+        quit_rect = quitTexto.get_rect(centerx=largura // 2, y=altura // 2 + 160)
+        pygame.draw.rect(tela, (255, 100, 100), quit_rect.inflate(8, 8))  
         tela.blit(sombra_quit, (quit_rect.x + 2, quit_rect.y + 2))
         tela.blit(quitTexto, quit_rect)
 
