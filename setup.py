@@ -7,7 +7,7 @@ cx_Freeze.setup(
         "build_exe":{
             "packages":["pygame", "random", "os", "tkinter", "json", "math", "datetime",
         "speech_recognition", "pyttsx3", "sys", "pyaudio", "aifc"],
-            "include_files": ["recursos", "fundoDead.png", "log.dat"],
+            "include_files": ["recursos", "log.dat"],
             "includes": ["aifc", "json"]
         }
     }, executables = executaveis

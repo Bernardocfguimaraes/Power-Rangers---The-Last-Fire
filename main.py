@@ -11,6 +11,7 @@ import speech_recognition as sr
 import pyttsx3
 import sys
 import pyaudio
+import aifc
 
 pygame.init()
 iniciabanco()
