@@ -20,18 +20,17 @@ iniciabanco()
 tamanho = (1000,700)
 largura = 1000
 altura = 700
-relogio = pygame.time.Clock()
 tela = pygame.display.set_mode( tamanho ) 
 fps = pygame.time.Clock()
 
 pygame.display.set_caption("Power Rangers - The Last Fire")
-#icone  = pygame.image.load("assets/icone.png")
+icone  = pygame.image.load("recursos/icon.png")
+pygame.display.set_icon(icone)
 
-#pygame.display.set_icon(icone)
 branco = (255,255,255)
 preto = (0, 0 ,0 )
 personagem = pygame.image.load("recursos/personagem.png")
-monstro = pygame.image.load("recursos/monstro.webp")
+monstro = pygame.image.load("recursos/monstro.png")
 fundoComeco = pygame.image.load("recursos/inicio.png")
 fundoJogo = pygame.image.load("recursos/fundo.png")
 fundoDead = pygame.image.load("recursos/morte.png")
@@ -59,14 +58,11 @@ def iniciar_jogo():
 
     personagem_x = largura // 2 - 75
     personagem_y = altura - 167
-
     personagem_rect = pygame.Rect(personagem_x, personagem_y, 150, 167)
 
     boladefogo_x = random.randint(0, largura - 80)
     boladefogo_y = -80
-
     boladefogo_rect = pygame.Rect(boladefogo_x, boladefogo_y, 80, 80)
-
     velocidade = 15
     velocidade_boladefogo = 2
     aumento_velocidade = 0.01
@@ -139,30 +135,30 @@ def iniciar_jogo():
         brilho_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
 
         for i in range(1, 6):
-            alpha = max(0, 70 - i * 12)
-            raio_brilho = int(raio_atual + i * 12)
-            cor_brilho = (255, 0, 0, alpha)
+            alpha = max(0, 50 - i * 10)
+            raio_brilho = int(raio_atual + i * 15)
+            cor_brilho = (100, 0, 0, alpha)
             pygame.draw.circle(brilho_surface, cor_brilho, (olho_x, olho_y), raio_brilho)
 
-        tela.blit(brilho_surface, (0, 0))
+            tela.blit(brilho_surface, (0, 0))
 
         for i in range(int(raio_atual), 0, -1):
             intensidade = 160 - int((i / raio_atual) * 50)
-            r = intensidade + 90
-            g = intensidade - 40
+            r = intensidade + 30
+            g = intensidade - 50
             b = intensidade - 50
             cor = (min(255, max(0, r)), min(255, max(0, g)), min(255, max(0, b)))
             pygame.draw.circle(tela, cor, (olho_x, olho_y), i)
 
-        pupila_width = int(raio_atual * 0.2)
-        pupila_height = int(raio_atual * 0.7)
+            pupila_width = int(raio_atual * 0.2)
+            pupila_height = int(raio_atual * 0.65)
 
-        offset_x = int(math.sin(tempo * 1.5) * 5)
-        offset_y = int(math.cos(tempo * 1.5) * 3)
+            offset_x = int(math.sin(tempo * 1.5) * 5)
+            offset_y = int(math.cos(tempo * 1.5) * 3)
 
-        pygame.draw.ellipse(
-    tela,
-    (0, 0, 0),
+            pygame.draw.ellipse(
+            tela,
+        (0, 0, 0),
     (
         olho_x - pupila_width // 2 + offset_x,
         olho_y - pupila_height // 2 + offset_y,
@@ -170,6 +166,9 @@ def iniciar_jogo():
         pupila_height,
     ),
 )
+
+        pygame.draw.circle(tela, (255, 255, 255, 180), (olho_x - 15, olho_y - 20), 8)
+        pygame.draw.circle(tela, (255, 255, 255, 100), (olho_x + 10, olho_y - 10), 4)
 
         veias_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
 
@@ -223,12 +222,16 @@ def game_over():
     botao_sair = pygame.Rect(largura // 2 - 110, altura // 2 + 120, 220, 50)
 
     tela.blit(fundoDead, (0, 0))
-
+# GAME OVER
     texto = fonteMorte.render("GAME OVER", True, (0, 0, 0))
     rect = texto.get_rect(center=(largura // 2, altura // 2 - 50))
-    fundo_rect = pygame.Rect(rect.left - 20, rect.top - 20, rect.width + 40, rect.height + 40)
-    pygame.draw.rect(tela, (0, 0, 0), fundo_rect, width=4, border_radius=20)  
-    tela.blit(texto, rect)
+
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if dx != 0 or dy != 0:
+                contorno = fonteMorte.render("GAME OVER", True, (255, 255, 255))
+            tela.blit(contorno, rect.move(dx, dy))
+            tela.blit(texto, rect)
 
     pygame.draw.rect(tela, branco, botao_restart, width=2, border_radius=8)
     pygame.draw.rect(tela, branco, botao_sair, width=2, border_radius=8)
@@ -249,7 +252,7 @@ def game_over():
     pygame.draw.rect(tela, (0, 0, 0), fundo_rect, border_radius=10)
     tela.blit(texto_pontos, rect_pontos)
 
-    fonte_registro = pygame.font.SysFont('comicsans', 20)
+    fonte_registro = pygame.font.SysFont('arial', 20)
     y_offset = 10
 
     titulo_log = fonte_registro.render("Últimas 5 Jogadas:", True, branco)
@@ -306,7 +309,9 @@ def tela_boas_vindas(nome_jogador):
         instrucoes = [
             "COMANDOS E INSTRUÇÕES:",
             "- Utilize as setas do teclado para movimentar o boneco.",
-            "- Não seja atingido pelas bolas de fogo que caem do céu.",
+            "- DETALHE: Você só pode se movimentar para direita ou esquerda.",
+            "- OBJETIVO: Não seja atingido pelas bolas de fogo que caem do céu.",
+            "- A cada bola de fogo desviada, você ganha 10 pontos.",
             "- Se você for atingido, o jogo acaba.",
             "- Pressione a tecla 'Espaço' para PAUSAR caso necessário.",
             "- Pressione ENTER para começar o jogo!.",
